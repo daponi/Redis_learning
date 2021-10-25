@@ -1,15 +1,11 @@
 package com.atguigu;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Random;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.ws.soap.AddressingFeature.Responses;
+import java.io.IOException;
+import java.util.Random;
 
 /**
  * 秒杀案例
@@ -27,7 +23,7 @@ public class SecKillServlet extends HttpServlet {
 		String prodid =request.getParameter("prodid");
 		
 		//boolean isSuccess=SecKill_redis.doSecKill(userid,prodid);
-		boolean isSuccess= com.atguigu.SecKill_redisByScript.doSecKill(userid,prodid);
+		boolean isSuccess= com.atguigu.SecKill_redisByScript.doSecKill(userid,prodid);//改为调用LUA脚本执行秒杀
 		response.getWriter().print(isSuccess);
 	}
 

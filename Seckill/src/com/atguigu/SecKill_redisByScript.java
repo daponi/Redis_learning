@@ -1,21 +1,13 @@
 package com.atguigu;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.core.joran.conditional.ElseAction;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.ShardedJedisPool;
-import redis.clients.jedis.Transaction;
+
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SecKill_redisByScript {
 	
@@ -31,6 +23,34 @@ public class SecKill_redisByScript {
 
 	//	doSecKill("201","sk:0101");
 	}
+
+	/**
+	 * 只有在Redis 2.6以上的版本才可以使用。
+	 * 使用LUA脚本解决库存遗留问题:
+	 *
+	 *--定义变量,KEYS[1]、KEYS[2]分别代表接受参数1、参数2
+	 * local userid=KEYS[1];
+	 * local prodid=KEYS[2];
+	 * local qtkey="sk:"..prodid..":qt";
+	 * local usersKey="sk:"..prodid.":usr';
+	 * --通知redis调用sismember方法，并传入两个参数
+	 * local userExists=redis.call("sismember",usersKey,userid);
+	 * if tonumber(userExists)==1 then
+	 * --当前用户已经秒杀过
+	 *   return 2;
+	 * end
+	 * local num= redis.call("get" ,qtkey);
+	 * if tonumber(num)<=0 then
+	 * --秒杀结束
+	 *   return 0;
+	 * else
+	 *   redis.call("decr",qtkey);
+	 *   redis.call("sadd",usersKey,userid);
+	 * end
+	 * --秒杀成功
+	 * return 1;
+	 *
+	 */
 	
 	static String secKillScript ="local userid=KEYS[1];\r\n" + 
 			"local prodid=KEYS[2];\r\n" + 
@@ -59,8 +79,8 @@ public class SecKill_redisByScript {
 		Jedis jedis=jedispool.getResource();
 
 		 //String sha1=  .secKillScript;
-		String sha1=  jedis.scriptLoad(secKillScript);
-		Object result= jedis.evalsha(sha1, 2, uid,prodid);
+		String sha1=  jedis.scriptLoad(secKillScript);//加载LUA脚本
+		Object result= jedis.evalsha(sha1, 2, uid,prodid);//执行脚本
 
 		  String reString=String.valueOf(result);
 		if ("0".equals( reString )  ) {

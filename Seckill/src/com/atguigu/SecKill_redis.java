@@ -1,21 +1,11 @@
 package com.atguigu;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.core.rolling.helper.IntegerTokenConverter;
-import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.ShardedJedisPool;
 import redis.clients.jedis.Transaction;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  *
@@ -40,7 +30,7 @@ public class SecKill_redis {
 		//Jedis jedis = new Jedis("192.168.108.131",6379);
 //		jedis.auth("1230123");
 
-		//通过连接池得到jedis对象
+		//改为通过连接池得到jedis对象
 		JedisPool jedisPoolInstance = com.atguigu.JedisPoolUtil.getJedisPoolInstance();
 		Jedis jedis = jedisPoolInstance.getResource();
 
@@ -50,7 +40,7 @@ public class SecKill_redis {
 		// 3.2 秒杀成功用户key
 		String userKey = "sk:"+prodid+":user";
 
-		//监视库存
+		//用watch增加乐观锁监视库存
 		jedis.watch(kcKey);
 
 		//4 获取库存，如果库存null，秒杀还没有开始
